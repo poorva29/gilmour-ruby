@@ -1,44 +1,47 @@
-require_relative '../gilmour'
+require_relative '../lib/gilmour'
 
-gilmour = Gilmour.new
+gilmour = Gilmour::Gilmour.new
 
-gilmour.reply_to 'echo_service', excl_group: 'echo_service',
-                                 timeout: 1 do |request, response|
+opts = Gilmour::HandlerOpts.new(timeout: 5, excl_group: 'echo_service')
+gilmour.reply_to 'echo_service', opts do |request, response|
   data = request.data
   first = data['first']
   second = data['second']
-  response.set_data('next' => first + second)
+  response.data = { 'next' => first + second }
 end
 
-gilmour.request!({ 'first' => 1, 'second' => 2 },
-                 'echo_service', timeout: 5) do |resp, code|
-  puts 'For echo_service', resp
-  if code.to_i != 200
-    $stderr.puts 'Something went wrong in the response! Aborting'
-    exit
-  end
+opts = Gilmour::RequestOpts.new(timeout: 5)
+req = Gilmour::Request.new('echo_service', opts)
+resp = req.execute!('first' => 1, 'second' => 2)
+if resp.code.to_i != 200
+  puts 'Something went wrong in the response . Aborting !'
+  exit
 end
+puts 'For echo_service'
+puts resp.data
 
-gilmour.reply_to 'echo_service1',
-                 excl_group: 'echo_service1', timeout: 1 do |request, response|
+opts = Gilmour::HandlerOpts.new(timeout: 5, excl_group: 'echo_service1')
+gilmour.reply_to 'echo_service1', opts do |request, response|
   data = request.data
-  puts 'For echo_service1', data
-  response.set_data(data)
+  response.data = data
 end
 
-gilmour.request!('Hello: 1', 'echo_service1',
-                 timeout: 5) do |resp, code|
-  puts resp
-  if code.to_i != 200
-    $stderr.puts 'Something went wrong in the response! Aborting'
-    exit
-  end
+opts = Gilmour::RequestOpts.new(timeout: 5)
+req = Gilmour::Request.new('echo_service1', opts)
+resp = req.execute!('Hello: 1')
+if resp.code.to_i != 200
+  puts 'Something went wrong in the response . Aborting !'
+  exit
 end
+puts 'For echo_service1'
+puts resp.data
 
-gilmour.slot 'echo_slot' do |request|
+opts = Gilmour::HandlerOpts.new(timeout: 5, excl_group: 'echo_service')
+gilmour.slot 'echo_slot', opts do |request|
   puts 'Sent push notification for -', request.data
 end
 
-gilmour.signal!('Hello: 2', 'echo_slot')
-sleep(1)
+gilmour.signal!({ 'first' => 1, 'second' => 2 }, 'echo_slot')
+sleep(2)
+
 gilmour.stop
