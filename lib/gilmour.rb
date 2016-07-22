@@ -68,29 +68,31 @@ module Gilmour
       handler_path
     end
 
-    def reply_to(topic, opts, &handler)
+    def reply_to(topic, opts = nil, &handler)
       data = {
         topic.to_s => {
-          group: opts.excl_group,
-          path: create_handler(topic, &handler),
-          timeout: opts.timeout
+          path: create_handler(topic, &handler)
         }
       }
+      unless opts.nil?
+        data[topic.to_s][:group] = opts.excl_group
+        data[topic.to_s][:timeout] = opts.timeout
+      end
       RestClient.post url + '/nodes/' + id + '/services',
                       data.to_json, content_type: :json, accept: :json
-      # parse body to check if request was successfull else retry
     end
 
     def slot(topic, opts, &handler)
       data = {
         topic: topic,
-        group: opts.excl_group,
-        path: create_handler(topic, &handler),
-        timeout: opts.timeout
+        path: create_handler(topic, &handler)
       }
+      unless opts.nil?
+        data[:group] = opts.excl_group
+        data[:timeout] = opts.timeout
+      end
       RestClient.post url + '/nodes/' + id + '/slots',
                       data.to_json, content_type: :json, accept: :json
-      # parse body to check if request was successfull else retry
     end
 
     def stop
