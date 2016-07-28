@@ -82,7 +82,7 @@ module Gilmour
                       data.to_json, content_type: :json, accept: :json
     end
 
-    def slot(topic, opts, &handler)
+    def slot(topic, opts = nil, &handler)
       data = {
         topic: topic,
         path: create_handler(topic, &handler)

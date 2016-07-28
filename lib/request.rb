@@ -5,9 +5,12 @@ module Gilmour
     include Common
     attr_reader :topic, :timeout, :nesting
 
-    def initialize(topic, opts)
+    def initialize(topic, opts = nil)
       @topic = topic
-      @timout = opts.timeout
+      unless opts.nil?
+        timeout = opts.timeout
+        @timeout = timeout if timeout
+      end
       @nesting = Module.nesting.last
     end
 
