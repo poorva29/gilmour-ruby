@@ -15,10 +15,6 @@ module Common
     String.new('pipe' + Random.rand(100).to_s)
   end
 
-  def get_handler_path(topic)
-    (topic + '_handler').to_sym
-  end
-
   def composition_hash(*executables)
     construct_hash = []
     executables.each do |executable|
