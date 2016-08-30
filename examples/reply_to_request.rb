@@ -19,7 +19,7 @@ if resp.code.to_i != 200
   exit
 end
 puts 'For echo_service'
-puts resp.data
+puts resp.next
 
 # reply_to with no timeout but has excel_group
 opts = Gilmour::HandlerOpts.new(excl_group: 'echo_service1')
@@ -35,7 +35,7 @@ if resp.code.to_i != 200
   exit
 end
 puts 'For echo_service1'
-puts resp.data
+puts resp.next
 
 # reply_to with no timeout and excel_group
 gilmour.reply_to 'echo_service2' do |request, response|
@@ -50,7 +50,7 @@ if resp.code.to_i != 200
   exit
 end
 puts 'For echo_service2'
-puts resp.data
+puts resp.next
 
 # reply_to with timeout and excel_group
 opts = Gilmour::HandlerOpts.new(timeout: 5, excl_group: 'echo_service3')
@@ -67,15 +67,22 @@ if resp.code.to_i != 200
   exit
 end
 puts 'For echo_service3'
-puts resp.data
+puts resp.next
 
-# Slot with excel_group and timeout
-opts = Gilmour::HandlerOpts.new(timeout: 5, excl_group: 'echo_service')
-gilmour.slot 'echo_slot', opts do |request|
-  puts 'Sent push notification for -', request.data
+# request takes with option , only hash is supported as of now
+opts = Gilmour::HandlerOpts.new(timeout: 5, excl_group: 'echo_service3')
+gilmour.reply_to 'echo_service3', opts do |request, response|
+  data = request.data
+  response.data = data
 end
 
-gilmour.signal!({ 'first' => 1, 'second' => 2 }, 'echo_slot')
+req = Gilmour::Request.new('echo_service3', nil).with(first: 1)
+resp = req.execute!(second: 2)
+if resp.code.to_i != 200
+  puts 'Something went wrong in the response . Aborting !'
+  exit
+end
+puts 'For echo_service3'
+puts resp.next
 
-sleep(2)
 gilmour.stop

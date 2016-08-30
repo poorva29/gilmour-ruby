@@ -3,6 +3,7 @@ module Gilmour
     attr_reader :req, :resp
 
     @handler_map = {}
+    @lambda_func = {}
 
     def initialize
       super
@@ -19,15 +20,19 @@ module Gilmour
     end
 
     post '/' do
-      content_type :json
-      request.body.rewind
-      info = JSON.parse request.body.read
-      path = info['handler_path']
-      handlers = self.class.handler_map
-      req.data = info['data']
-      proc = handlers[path.to_sym]
-      proc.call(req, resp)
-      resp.data.to_json
+      begin
+        content_type :json
+        request.body.rewind
+        info = JSON.parse request.body.read
+        path = info['handler_path']
+        handlers = self.class.handler_map
+        req.data = info['data']
+        proc = handlers[path.to_sym]
+        proc.call(req, resp)
+        resp.data.to_json
+      rescue StandardError => e
+        halt 500, e
+      end
     end
 
     get '/health_check' do

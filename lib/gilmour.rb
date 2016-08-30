@@ -5,6 +5,12 @@ require 'rest-client'
 require 'sinatra'
 require 'sinatra/base'
 require 'thin'
+require_relative 'composition_andand'
+require_relative 'composition_batch'
+require_relative 'composition_oror'
+require_relative 'composition_lambda'
+require_relative 'composition_pipe'
+require_relative 'composition_parallel'
 require_relative 'request'
 require_relative 'response'
 require_relative 'handler_opts'
@@ -17,9 +23,6 @@ require_relative 'common'
 module Gilmour
   class << self
     attr_accessor :id, :publish_socket
-  end
-
-  def foo
   end
 
   class Gilmour
@@ -97,6 +100,7 @@ module Gilmour
 
     def stop
       @thin_server.stop
+      RestClient.delete url + '/nodes/' + id
     end
   end
 end

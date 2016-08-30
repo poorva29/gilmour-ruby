@@ -1,9 +1,11 @@
+require 'json'
+
 module Gilmour
   class Response
-    attr_reader :code, :data
+    attr_reader :code, :data, :next
 
     def initialize(body, code)
-      @data = body
+      @next = body.nil? ? nil : JSON.parse(body)
       @code = code
     end
   end

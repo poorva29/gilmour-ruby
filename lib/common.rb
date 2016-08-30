@@ -1,6 +1,39 @@
 module Common
+  def parallel_str
+    String.new('parallel' + Random.rand(100).to_s)
+  end
+
+  def request_str
+    String.new('requests' + Random.rand(100).to_s)
+  end
+
+  def lambda_str
+    String.new('lambda' + Random.rand(100).to_s)
+  end
+
+  def pipe_str
+    String.new('pipe' + Random.rand(100).to_s)
+  end
+
   def get_handler_path(topic)
     (topic + '_handler').to_sym
+  end
+
+  def composition_hash(*executables)
+    construct_hash = []
+    executables.each do |executable|
+      case executable.class.name
+      when 'Gilmour::Request'
+        construct_hash.push(request_str => executable.req_hash)
+      when 'Gilmour::Parallel'
+        construct_hash.push(parallel_str => executable.parallel_hash['parallel'])
+      when 'Gilmour::Lambda'
+        construct_hash.push('lambda' => executable.lambda_hash['lambda'])
+      when 'Gilmour::Pipe'
+        construct_hash.push(pipe_str => executable.pipe_hash['pipe'])
+      end
+    end
+    construct_hash
   end
 
   def send_http_req(req_url, body)
@@ -17,10 +50,17 @@ module Common
   end
 
   def format_data(data, topic, opts)
-    message = {
+    {
+      topic: topic,
+      message: data,
+      opts: opts
+    }.to_json
+  end
+
+  def format_composition_data(data, composition)
+    {
       data: data,
-      handler_path: get_handler_path(topic)
-    }
-    { topic: topic, message: message, opts: opts }.to_json
+      composition: composition
+    }.to_json
   end
 end
