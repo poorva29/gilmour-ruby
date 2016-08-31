@@ -43,6 +43,8 @@ module Common
     end while response.is_a?(Net::HTTPContinue)
     response.reading_body(sock, req.response_body_permitted?) {}
     response
+  rescue StandardError => e
+    puts "Error: #{e.message}"
   end
 
   def format_data(data, topic, opts)

@@ -6,7 +6,7 @@ module Gilmour
 
     def initialize(body, code)
       @next = body.nil? ? nil : JSON.parse(body)
-      @code = code
+      @code = code.nil? ? nil : code
     end
   end
 end

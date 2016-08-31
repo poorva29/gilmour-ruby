@@ -28,7 +28,11 @@ module Gilmour
       req_url = 'unix://127.0.0.1/request/' + nesting.id
       body = format_data(data, topic, opts)
       response = send_http_req(req_url, body)
-      Response.new(response.body, response.code)
+      if response.nil?
+        Response.new(nil, nil)
+      else
+        Response.new(response.body, response.code)
+      end
     end
 
     def req_hash

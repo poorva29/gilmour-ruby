@@ -57,6 +57,10 @@ module Gilmour
       node_details = JSON.parse(response.body)
       nesting.publish_socket = node_details['publish_socket']
       nesting.id = @id = node_details['id']
+    rescue StandardError => e
+      nesting.publish_socket = ''
+      nesting.id = @id = ''
+      puts "Error initializing node: #{e.message}"
     end
 
     def signal!(data, topic, opts = {})
@@ -81,8 +85,26 @@ module Gilmour
         data[topic.to_s][:group] = opts.excl_group
         data[topic.to_s][:timeout] = opts.timeout
       end
-      RestClient.post url + '/nodes/' + id + '/services',
-                      data.to_json, content_type: :json, accept: :json
+      RestClient.post url + '/nodes/services',
+                      data.to_json, content_type: :json, accept: :json,
+                                    Authorization: id
+    rescue StandardError => e
+      puts "Error subscribing service: #{e.message}"
+    end
+
+    def unsubscribe_reply(topic)
+      RestClient.delete url + "/nodes/services?topic=#{topic}",
+                        accept: :json, Authorization: id
+    rescue StandardError => e
+      puts "Error unsubscribing service: #{e.message}"
+    end
+
+    def subscribed_services
+      resp = RestClient.get url + '/nodes/services',
+                            accept: :json, Authorization: id
+      JSON.parse(resp)
+    rescue StandardError => e
+      puts "Error fetching services: #{e.message}"
     end
 
     def slot(topic, opts = nil, &handler)
@@ -94,13 +116,33 @@ module Gilmour
         data[:group] = opts.excl_group
         data[:timeout] = opts.timeout
       end
-      RestClient.post url + '/nodes/' + id + '/slots',
-                      data.to_json, content_type: :json, accept: :json
+      RestClient.post url + '/nodes/slots',
+                      data.to_json, content_type: :json, accept: :json,
+                                    Authorization: id
+    rescue StandardError => e
+      puts "Error subscribing slot: #{e.message}"
+    end
+
+    def unsubscribe_slot(topic)
+      RestClient.delete url + "/nodes/slots?topic=#{topic}",
+                        accept: :json, Authorization: id
+    rescue StandardError => e
+      puts "Error unsubscribing slot: #{e.message}"
+    end
+
+    def subscribed_slots
+      resp = RestClient.get url + '/nodes/slots',
+                            accept: :json, Authorization: id
+      JSON.parse(resp)
+    rescue StandardError => e
+      puts "Error fetching slots: #{e.message}"
     end
 
     def stop
       @thin_server.stop
-      RestClient.delete url + '/nodes/' + id
+      RestClient.delete url + '/nodes', Authorization: id
+    rescue StandardError => e
+      puts "Error stopping server: #{e.message}"
     end
   end
 end
